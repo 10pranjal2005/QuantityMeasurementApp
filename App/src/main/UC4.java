@@ -1,16 +1,23 @@
 package com.apps.quantitymeasurement;
 
 /**
- * UC3: Generic Quantity Length Class using DRY Principle
+ * UC4: Extended Unit Support
+ * Added YARDS and CENTIMETERS support
  */
 
 public class QuantityMeasurementApp {
 
-    // Step 1: Enum for units
+    // Updated enum with new units
     public enum LengthUnit {
 
         FEET(1.0),
-        INCH(1.0 / 12.0);
+
+        INCHES(1.0 / 12.0),
+
+        YARDS(3.0),
+
+        CENTIMETERS(0.393701 / 12.0);
+
 
         private final double conversionFactorToFeet;
 
@@ -24,7 +31,7 @@ public class QuantityMeasurementApp {
     }
 
 
-    // Step 2: Generic QuantityLength class
+    // Generic QuantityLength class (same as UC3)
     public static class QuantityLength {
 
         private final double value;
@@ -43,59 +50,58 @@ public class QuantityMeasurementApp {
         @Override
         public boolean equals(Object obj) {
 
-            // Same reference
             if (this == obj)
                 return true;
 
-            // Null + type check
             if (obj == null || getClass() != obj.getClass())
                 return false;
 
             QuantityLength other = (QuantityLength) obj;
 
-            // Convert both to feet before comparison
-            double thisValueInFeet = this.unit.toFeet(this.value);
-            double otherValueInFeet = other.unit.toFeet(other.value);
+            double thisFeet = this.unit.toFeet(this.value);
 
-            return Double.compare(thisValueInFeet, otherValueInFeet) == 0;
+            double otherFeet = other.unit.toFeet(other.value);
+
+            return Double.compare(thisFeet, otherFeet) == 0;
         }
 
 
         @Override
         public int hashCode() {
 
-            double valueInFeet = unit.toFeet(value);
+            double valueFeet = unit.toFeet(value);
 
-            return Double.hashCode(valueInFeet);
+            return Double.hashCode(valueFeet);
         }
     }
 
 
-    // Main method demonstration
+    // Demo main method
     public static void main(String[] args) {
 
         QuantityLength q1 =
-                new QuantityLength(1.0, LengthUnit.FEET);
+                new QuantityLength(1.0, LengthUnit.YARDS);
 
         QuantityLength q2 =
-                new QuantityLength(12.0, LengthUnit.INCH);
+                new QuantityLength(3.0, LengthUnit.FEET);
 
         QuantityLength q3 =
-                new QuantityLength(1.0, LengthUnit.INCH);
+                new QuantityLength(36.0, LengthUnit.INCHES);
 
         QuantityLength q4 =
-                new QuantityLength(1.0, LengthUnit.INCH);
+                new QuantityLength(1.0, LengthUnit.CENTIMETERS);
+
+        QuantityLength q5 =
+                new QuantityLength(0.393701, LengthUnit.INCHES);
 
 
-        System.out.println(
-                "Input: Quantity(1.0, \"feet\") and Quantity(12.0, \"inches\")");
-
+        System.out.println("Input: Quantity(1.0, YARDS) and Quantity(3.0, FEET)");
         System.out.println("Output: Equal (" + q1.equals(q2) + ")");
 
+        System.out.println("Input: Quantity(1.0, YARDS) and Quantity(36.0, INCHES)");
+        System.out.println("Output: Equal (" + q1.equals(q3) + ")");
 
-        System.out.println(
-                "Input: Quantity(1.0, \"inch\") and Quantity(1.0, \"inch\")");
-
-        System.out.println("Output: Equal (" + q3.equals(q4) + ")");
+        System.out.println("Input: Quantity(1.0, CENTIMETERS) and Quantity(0.393701, INCHES)");
+        System.out.println("Output: Equal (" + q4.equals(q5) + ")");
     }
 }
