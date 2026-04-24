@@ -1,12 +1,12 @@
 package com.apps.quantitymeasurement;
 
 /**
- * UC6: Addition of Two Length Units
+ * UC7: Addition with Target Unit Specification
  */
 
 public class QuantityMeasurementApp {
 
-    // Enum with conversion factors relative to FEET (base unit)
+    // Enum with conversion factors relative to FEET
     public enum LengthUnit {
 
         FEET(1.0),
@@ -33,7 +33,6 @@ public class QuantityMeasurementApp {
     }
 
 
-    // Generic QuantityLength class
     public static class QuantityLength {
 
         private final double value;
@@ -53,33 +52,38 @@ public class QuantityMeasurementApp {
         }
 
 
-        // Addition method (instance-based)
+        // UC6 method (implicit result unit = first operand)
         public QuantityLength add(QuantityLength other) {
 
-            if (other == null)
-                throw new IllegalArgumentException("Second operand cannot be null");
-
-            double thisFeet = unit.toFeet(this.value);
-
-            double otherFeet = other.unit.toFeet(other.value);
-
-            double sumFeet = thisFeet + otherFeet;
-
-            double resultValue = unit.fromFeet(sumFeet);
-
-            return new QuantityLength(resultValue, unit);
+            return add(this, other, this.unit);
         }
 
 
-        // Static addition method (optional overload)
+        // UC7 method (explicit target unit)
         public static QuantityLength add(
                 QuantityLength length1,
-                QuantityLength length2) {
+                QuantityLength length2,
+                LengthUnit targetUnit) {
 
             if (length1 == null || length2 == null)
                 throw new IllegalArgumentException("Operands cannot be null");
 
-            return length1.add(length2);
+            if (targetUnit == null)
+                throw new IllegalArgumentException("Target unit cannot be null");
+
+            double feetValue1 =
+                    length1.unit.toFeet(length1.value);
+
+            double feetValue2 =
+                    length2.unit.toFeet(length2.value);
+
+            double sumFeet =
+                    feetValue1 + feetValue2;
+
+            double resultValue =
+                    targetUnit.fromFeet(sumFeet);
+
+            return new QuantityLength(resultValue, targetUnit);
         }
 
 
@@ -92,11 +96,14 @@ public class QuantityMeasurementApp {
             if (obj == null || getClass() != obj.getClass())
                 return false;
 
-            QuantityLength other = (QuantityLength) obj;
+            QuantityLength other =
+                    (QuantityLength) obj;
 
-            double thisFeet = unit.toFeet(value);
+            double thisFeet =
+                    unit.toFeet(value);
 
-            double otherFeet = other.unit.toFeet(other.value);
+            double otherFeet =
+                    other.unit.toFeet(other.value);
 
             return Double.compare(thisFeet, otherFeet) == 0;
         }
@@ -110,32 +117,31 @@ public class QuantityMeasurementApp {
     }
 
 
-    // Demo main method
     public static void main(String[] args) {
 
-        QuantityLength q1 =
+        QuantityLength feet =
                 new QuantityLength(1.0, LengthUnit.FEET);
 
-        QuantityLength q2 =
+        QuantityLength inches =
                 new QuantityLength(12.0, LengthUnit.INCHES);
 
-        QuantityLength result = q1.add(q2);
 
         System.out.println(
-                "add(Quantity(1.0, FEET), Quantity(12.0, INCHES))");
-
-        System.out.println("Output: " + result);
-
-
-        QuantityLength yard =
-                new QuantityLength(1.0, LengthUnit.YARDS);
-
-        QuantityLength feet =
-                new QuantityLength(3.0, LengthUnit.FEET);
+                QuantityLength.add(
+                        feet,
+                        inches,
+                        LengthUnit.FEET));
 
         System.out.println(
-                "add(Quantity(1.0, YARDS), Quantity(3.0, FEET))");
+                QuantityLength.add(
+                        feet,
+                        inches,
+                        LengthUnit.INCHES));
 
-        System.out.println("Output: " + yard.add(feet));
+        System.out.println(
+                QuantityLength.add(
+                        feet,
+                        inches,
+                        LengthUnit.YARDS));
     }
 }
