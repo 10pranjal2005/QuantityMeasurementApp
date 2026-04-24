@@ -1,7 +1,7 @@
 package com.apps.quantitymeasurement;
 
 /**
- * UC5: Unit-to-Unit Conversion Support
+ * UC6: Addition of Two Length Units
  */
 
 public class QuantityMeasurementApp {
@@ -39,6 +39,7 @@ public class QuantityMeasurementApp {
         private final double value;
         private final LengthUnit unit;
 
+
         public QuantityLength(double value, LengthUnit unit) {
 
             if (unit == null)
@@ -52,35 +53,33 @@ public class QuantityMeasurementApp {
         }
 
 
-        // Instance conversion method
-        public QuantityLength convertTo(LengthUnit targetUnit) {
+        // Addition method (instance-based)
+        public QuantityLength add(QuantityLength other) {
 
-            if (targetUnit == null)
-                throw new IllegalArgumentException("Target unit cannot be null");
+            if (other == null)
+                throw new IllegalArgumentException("Second operand cannot be null");
 
-            double valueInFeet = unit.toFeet(value);
+            double thisFeet = unit.toFeet(this.value);
 
-            double convertedValue = targetUnit.fromFeet(valueInFeet);
+            double otherFeet = other.unit.toFeet(other.value);
 
-            return new QuantityLength(convertedValue, targetUnit);
+            double sumFeet = thisFeet + otherFeet;
+
+            double resultValue = unit.fromFeet(sumFeet);
+
+            return new QuantityLength(resultValue, unit);
         }
 
 
-        // Static conversion API (assignment requirement)
-        public static double convert(
-                double value,
-                LengthUnit source,
-                LengthUnit target) {
+        // Static addition method (optional overload)
+        public static QuantityLength add(
+                QuantityLength length1,
+                QuantityLength length2) {
 
-            if (!Double.isFinite(value))
-                throw new IllegalArgumentException("Invalid numeric value");
+            if (length1 == null || length2 == null)
+                throw new IllegalArgumentException("Operands cannot be null");
 
-            if (source == null || target == null)
-                throw new IllegalArgumentException("Units cannot be null");
-
-            double valueInFeet = source.toFeet(value);
-
-            return target.fromFeet(valueInFeet);
+            return length1.add(length2);
         }
 
 
@@ -96,6 +95,7 @@ public class QuantityMeasurementApp {
             QuantityLength other = (QuantityLength) obj;
 
             double thisFeet = unit.toFeet(value);
+
             double otherFeet = other.unit.toFeet(other.value);
 
             return Double.compare(thisFeet, otherFeet) == 0;
@@ -113,28 +113,29 @@ public class QuantityMeasurementApp {
     // Demo main method
     public static void main(String[] args) {
 
-        System.out.println(
-                "convert(1.0, FEET, INCHES) → "
-                        + QuantityLength.convert(1.0,
-                        LengthUnit.FEET,
-                        LengthUnit.INCHES));
+        QuantityLength q1 =
+                new QuantityLength(1.0, LengthUnit.FEET);
+
+        QuantityLength q2 =
+                new QuantityLength(12.0, LengthUnit.INCHES);
+
+        QuantityLength result = q1.add(q2);
 
         System.out.println(
-                "convert(3.0, YARDS, FEET) → "
-                        + QuantityLength.convert(3.0,
-                        LengthUnit.YARDS,
-                        LengthUnit.FEET));
+                "add(Quantity(1.0, FEET), Quantity(12.0, INCHES))");
+
+        System.out.println("Output: " + result);
+
+
+        QuantityLength yard =
+                new QuantityLength(1.0, LengthUnit.YARDS);
+
+        QuantityLength feet =
+                new QuantityLength(3.0, LengthUnit.FEET);
 
         System.out.println(
-                "convert(36.0, INCHES, YARDS) → "
-                        + QuantityLength.convert(36.0,
-                        LengthUnit.INCHES,
-                        LengthUnit.YARDS));
+                "add(Quantity(1.0, YARDS), Quantity(3.0, FEET))");
 
-        System.out.println(
-                "convert(1.0, CENTIMETERS, INCHES) → "
-                        + QuantityLength.convert(1.0,
-                        LengthUnit.CENTIMETERS,
-                        LengthUnit.INCHES));
+        System.out.println("Output: " + yard.add(feet));
     }
 }
