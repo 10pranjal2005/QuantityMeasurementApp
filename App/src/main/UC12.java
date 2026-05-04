@@ -1,18 +1,17 @@
 package main;
 
-public class UC11 {
+public class UC12 {
 
-    // Interface (same as UC10)
+    // Interface
     public interface IMeasurable {
 
-        double getConversionFactor();
         double convertToBaseUnit(double value);
         double convertFromBaseUnit(double baseValue);
         String getUnitName();
     }
 
 
-    // LengthUnit (same)
+    // LengthUnit
     public enum LengthUnit implements IMeasurable {
         FEET(1.0),
         INCHES(1.0 / 12.0);
@@ -23,8 +22,6 @@ public class UC11 {
             this.factor = factor;
         }
 
-        public double getConversionFactor() { return factor; }
-
         public double convertToBaseUnit(double value) {
             return value * factor;
         }
@@ -37,7 +34,7 @@ public class UC11 {
     }
 
 
-    // WeightUnit (same)
+    // WeightUnit
     public enum WeightUnit implements IMeasurable {
         KILOGRAM(1.0),
         GRAM(0.001);
@@ -48,7 +45,29 @@ public class UC11 {
             this.factor = factor;
         }
 
-        public double getConversionFactor() { return factor; }
+        public double convertToBaseUnit(double value) {
+            return value * factor;
+        }
+
+        public double convertFromBaseUnit(double baseValue) {
+            return baseValue / factor;
+        }
+
+        public String getUnitName() { return name(); }
+    }
+
+
+    // VolumeUnit
+    public enum VolumeUnit implements IMeasurable {
+        LITRE(1.0),
+        MILLILITRE(0.001),
+        GALLON(3.78541);
+
+        private final double factor;
+
+        VolumeUnit(double factor) {
+            this.factor = factor;
+        }
 
         public double convertToBaseUnit(double value) {
             return value * factor;
@@ -62,38 +81,7 @@ public class UC11 {
     }
 
 
-    // ✅ NEW — VolumeUnit
-    public enum VolumeUnit implements IMeasurable {
-
-        LITRE(1.0),
-        MILLILITRE(0.001),
-        GALLON(3.78541);
-
-        private final double factor;
-
-        VolumeUnit(double factor) {
-            this.factor = factor;
-        }
-
-        public double getConversionFactor() {
-            return factor;
-        }
-
-        public double convertToBaseUnit(double value) {
-            return value * factor;
-        }
-
-        public double convertFromBaseUnit(double baseValue) {
-            return baseValue / factor;
-        }
-
-        public String getUnitName() {
-            return name();
-        }
-    }
-
-
-    // Generic Quantity class (same as UC10)
+    // Generic Quantity Class
     public static class Quantity<U extends IMeasurable> {
 
         private final double value;
@@ -112,6 +100,8 @@ public class UC11 {
         }
 
 
+        // -------- EXISTING --------
+
         public Quantity<U> convertTo(U targetUnit) {
 
             double base = unit.convertToBaseUnit(value);
@@ -124,14 +114,69 @@ public class UC11 {
 
         public Quantity<U> add(Quantity<U> other, U targetUnit) {
 
-            double base1 = unit.convertToBaseUnit(value);
-            double base2 = other.unit.convertToBaseUnit(other.value);
+            validate(other, targetUnit);
 
-            double sum = base1 + base2;
+            double sum = toBase() + other.toBase();
 
-            double result = targetUnit.convertFromBaseUnit(sum);
+            return new Quantity<>(round(targetUnit.convertFromBaseUnit(sum)), targetUnit);
+        }
 
-            return new Quantity<>(round(result), targetUnit);
+
+        // -------- UC12 NEW --------
+
+        // Subtraction (implicit unit)
+        public Quantity<U> subtract(Quantity<U> other) {
+            return subtract(other, this.unit);
+        }
+
+
+        // Subtraction (explicit unit)
+        public Quantity<U> subtract(Quantity<U> other, U targetUnit) {
+
+            validate(other, targetUnit);
+
+            double result = toBase() - other.toBase();
+
+            return new Quantity<>(round(targetUnit.convertFromBaseUnit(result)), targetUnit);
+        }
+
+
+        // Division (returns double)
+        public double divide(Quantity<U> other) {
+
+            if (other == null)
+                throw new IllegalArgumentException("Other cannot be null");
+
+            if (unit.getClass() != other.unit.getClass())
+                throw new IllegalArgumentException("Different categories");
+
+            if (other.value == 0.0)
+                throw new ArithmeticException("Division by zero");
+
+            return toBase() / other.toBase();
+        }
+
+
+        // -------- HELPERS --------
+
+        private double toBase() {
+            return unit.convertToBaseUnit(value);
+        }
+
+        private void validate(Quantity<U> other, U targetUnit) {
+
+            if (other == null)
+                throw new IllegalArgumentException("Other cannot be null");
+
+            if (targetUnit == null)
+                throw new IllegalArgumentException("Target unit cannot be null");
+
+            if (unit.getClass() != other.unit.getClass())
+                throw new IllegalArgumentException("Different categories");
+        }
+
+        private double round(double v) {
+            return Math.round(v * 100.0) / 100.0;
         }
 
 
@@ -148,15 +193,7 @@ public class UC11 {
             if (unit.getClass() != other.unit.getClass())
                 return false;
 
-            double base1 = unit.convertToBaseUnit(value);
-            double base2 = other.unit.convertToBaseUnit(other.value);
-
-            return Double.compare(base1, base2) == 0;
-        }
-
-
-        private double round(double v) {
-            return Math.round(v * 100.0) / 100.0;
+            return Double.compare(toBase(), other.toBase()) == 0;
         }
 
 
@@ -167,31 +204,19 @@ public class UC11 {
     }
 
 
-    // Main demo
+    // MAIN
     public static void main(String[] args) {
 
-        Quantity<VolumeUnit> v1 =
-                new Quantity<>(1.0, VolumeUnit.LITRE);
+        Quantity<LengthUnit> f =
+                new Quantity<>(10.0, LengthUnit.FEET);
 
-        Quantity<VolumeUnit> v2 =
-                new Quantity<>(1000.0, VolumeUnit.MILLILITRE);
+        Quantity<LengthUnit> i =
+                new Quantity<>(6.0, LengthUnit.INCHES);
 
-        Quantity<VolumeUnit> v3 =
-                new Quantity<>(1.0, VolumeUnit.GALLON);
+        // Subtraction
+        System.out.println(f.subtract(i)); // 9.5 feet
 
-        // Equality
-        System.out.println(v1.equals(v2)); // true
-
-        // Conversion
-        System.out.println(v1.convertTo(VolumeUnit.MILLILITRE));
-
-        // Addition
-        System.out.println(v1.add(v2, VolumeUnit.LITRE));
-
-        // Cross-category check
-        Quantity<LengthUnit> l =
-                new Quantity<>(1.0, LengthUnit.FEET);
-
-        System.out.println(v1.equals(l)); // false
+        // Division
+        System.out.println(f.divide(new Quantity<>(2.0, LengthUnit.FEET))); // 5.0
     }
 }
