@@ -1,27 +1,21 @@
 package main;
 
-public class UC10 {
+public class UC11 {
 
-    // Step 1: Interface
+    // Interface (same as UC10)
     public interface IMeasurable {
 
         double getConversionFactor();
-
         double convertToBaseUnit(double value);
-
         double convertFromBaseUnit(double baseValue);
-
         String getUnitName();
     }
 
 
-    // Step 2: LengthUnit
+    // LengthUnit (same)
     public enum LengthUnit implements IMeasurable {
-
         FEET(1.0),
-        INCHES(1.0 / 12.0),
-        YARDS(3.0),
-        CENTIMETERS(1.0 / 30.48);
+        INCHES(1.0 / 12.0);
 
         private final double factor;
 
@@ -29,9 +23,7 @@ public class UC10 {
             this.factor = factor;
         }
 
-        public double getConversionFactor() {
-            return factor;
-        }
+        public double getConversionFactor() { return factor; }
 
         public double convertToBaseUnit(double value) {
             return value * factor;
@@ -41,22 +33,45 @@ public class UC10 {
             return baseValue / factor;
         }
 
-        public String getUnitName() {
-            return name();
-        }
+        public String getUnitName() { return name(); }
     }
 
 
-    // Step 3: WeightUnit
+    // WeightUnit (same)
     public enum WeightUnit implements IMeasurable {
-
         KILOGRAM(1.0),
-        GRAM(0.001),
-        POUND(0.453592);
+        GRAM(0.001);
 
         private final double factor;
 
         WeightUnit(double factor) {
+            this.factor = factor;
+        }
+
+        public double getConversionFactor() { return factor; }
+
+        public double convertToBaseUnit(double value) {
+            return value * factor;
+        }
+
+        public double convertFromBaseUnit(double baseValue) {
+            return baseValue / factor;
+        }
+
+        public String getUnitName() { return name(); }
+    }
+
+
+    // ✅ NEW — VolumeUnit
+    public enum VolumeUnit implements IMeasurable {
+
+        LITRE(1.0),
+        MILLILITRE(0.001),
+        GALLON(3.78541);
+
+        private final double factor;
+
+        VolumeUnit(double factor) {
             this.factor = factor;
         }
 
@@ -78,7 +93,7 @@ public class UC10 {
     }
 
 
-    // Step 4: Generic Quantity Class
+    // Generic Quantity class (same as UC10)
     public static class Quantity<U extends IMeasurable> {
 
         private final double value;
@@ -107,12 +122,6 @@ public class UC10 {
         }
 
 
-        public Quantity<U> add(Quantity<U> other) {
-
-            return add(other, this.unit);
-        }
-
-
         public Quantity<U> add(Quantity<U> other, U targetUnit) {
 
             double base1 = unit.convertToBaseUnit(value);
@@ -136,7 +145,6 @@ public class UC10 {
 
             Quantity<?> other = (Quantity<?>) obj;
 
-            // Prevent cross-category
             if (unit.getClass() != other.unit.getClass())
                 return false;
 
@@ -147,8 +155,8 @@ public class UC10 {
         }
 
 
-        private double round(double value) {
-            return Math.round(value * 100.0) / 100.0;
+        private double round(double v) {
+            return Math.round(v * 100.0) / 100.0;
         }
 
 
@@ -159,34 +167,31 @@ public class UC10 {
     }
 
 
-    // Main method
+    // Main demo
     public static void main(String[] args) {
 
-        // Length
-        Quantity<LengthUnit> l1 =
+        Quantity<VolumeUnit> v1 =
+                new Quantity<>(1.0, VolumeUnit.LITRE);
+
+        Quantity<VolumeUnit> v2 =
+                new Quantity<>(1000.0, VolumeUnit.MILLILITRE);
+
+        Quantity<VolumeUnit> v3 =
+                new Quantity<>(1.0, VolumeUnit.GALLON);
+
+        // Equality
+        System.out.println(v1.equals(v2)); // true
+
+        // Conversion
+        System.out.println(v1.convertTo(VolumeUnit.MILLILITRE));
+
+        // Addition
+        System.out.println(v1.add(v2, VolumeUnit.LITRE));
+
+        // Cross-category check
+        Quantity<LengthUnit> l =
                 new Quantity<>(1.0, LengthUnit.FEET);
 
-        Quantity<LengthUnit> l2 =
-                new Quantity<>(12.0, LengthUnit.INCHES);
-
-        System.out.println(l1.equals(l2));
-        System.out.println(l1.convertTo(LengthUnit.INCHES));
-        System.out.println(l1.add(l2, LengthUnit.FEET));
-
-
-        // Weight
-        Quantity<WeightUnit> w1 =
-                new Quantity<>(1.0, WeightUnit.KILOGRAM);
-
-        Quantity<WeightUnit> w2 =
-                new Quantity<>(1000.0, WeightUnit.GRAM);
-
-        System.out.println(w1.equals(w2));
-        System.out.println(w1.convertTo(WeightUnit.GRAM));
-        System.out.println(w1.add(w2, WeightUnit.KILOGRAM));
-
-
-        // Cross category (must be false)
-        System.out.println(l1.equals(w1));
+        System.out.println(v1.equals(l)); // false
     }
 }
